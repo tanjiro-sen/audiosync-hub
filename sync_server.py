@@ -1,26 +1,20 @@
-from flask import Flask, request
-import time, socket
+import socket
+import time
 
-app = Flask(__name__)
+PORT = 8888
+BROADCAST_IP = "255.255.255.255"
+AUDIO_PLAY_DELAY = 3  # seconds
 
-@app.route("/sync", methods=["POST"])
-def sync_audio():
-    audio = request.files['audio']
-    devices = request.form['devices'].split(",")
-    delay = int(request.form['delay'])
+def broadcast_play_time():
+    play_at = time.time() + AUDIO_PLAY_DELAY
+    message = str(play_at).encode()
 
-    # Save audio to disk
-    audio_path = "audio.wav"
-    audio.save(audio_path)
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+    s.sendto(message, (BROADCAST_IP, PORT))
+    s.close()
 
-    play_time = time.time() + delay
-    for ip in devices:
-        s = socket.socket()
-        s.connect((ip.strip(), 8888))
-        s.sendall(f"{play_time}".encode())
-        s.close()
-
-    return "Play signal sent", 200
+    print(f"Broadcasted play time: {play_at}")
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    broadcast_play_time()
