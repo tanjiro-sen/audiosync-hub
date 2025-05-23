@@ -1,4 +1,4 @@
 streamlit
 requests
 flask
-simpleaudio
+pygame  # fallback if simpleaudio fails
